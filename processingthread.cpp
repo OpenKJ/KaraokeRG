@@ -10,6 +10,9 @@ ProcessingThread::ProcessingThread(QObject *parent) :
     QThread(parent)
 {
     m_terminate = false;
+    settings = new Settings(this);
+    m_force = settings->forceReprocessing();
+    mp3gainPath = settings->mp3GainPath();
 }
 
 void ProcessingThread::setFiles(QStringList *files)
@@ -19,36 +22,36 @@ void ProcessingThread::setFiles(QStringList *files)
 
 void ProcessingThread::processFile(QString fileName)
 {
-    qDebug() << "Processing - File: " << fileName;
+    qWarning() << "Processing - File: " << fileName;
     QFileInfo info(fileName);
     QString baseName = info.completeBaseName();
     emit stateChanged("Extracting file");
     QTemporaryDir tmpDir;
     ZipHandler zipper;
     zipper.setZipFile(fileName);
-    if (zipper.containsRGMarkerFile())
+    if ((zipper.containsRGMarkerFile()) && (!m_force))
     {
-        qDebug() << "File contains marker, already processed.  Skipping";
+        qWarning() << "File contains marker, already processed.  Skipping";
         emit stateChanged("Skipping file, already processed");
         return;
     }
-    qDebug() << "Processing - Extracting mp3 file";
+    qWarning() << "Processing - Extracting mp3 file";
     if (!zipper.extractMp3(QDir(tmpDir.path())))
     {
-        qDebug() << "Bad file contents - error extracting mp3";
+        qWarning() << "Bad file contents - error extracting mp3";
         emit stateChanged("Error extracting file");
         return;
     }
     QFile::copy(tmpDir.path() + QDir::separator() + "tmp.mp3", "/storage/KaraokeRGTest/PreRG.mp3");
-    qDebug() << "Processing - Extracting cdg file";
+    qWarning() << "Processing - Extracting cdg file";
     if (!zipper.extractCdg(QDir(tmpDir.path())))
     {
-        qDebug() << "Processing - Bad file contents - error extracting cdg";
+        qWarning() << "Processing - Bad file contents - error extracting cdg";
         emit stateChanged("Error extracting file");
         return;
     }
     emit stateChanged("Processing - Doing ReplayGain analasis and adjustment");
-    QString program = "/usr/bin/mp3gain";
+    QString program = mp3gainPath;
     QStringList arguments;
     arguments << "-c";
     arguments << "-r";
@@ -59,9 +62,9 @@ void ProcessingThread::processFile(QString fileName)
     process.start(program, arguments);
     process.waitForFinished();
     QFile::copy(tmpDir.path() + QDir::separator() + "tmp.mp3", "/storage/KaraokeRGTest/PostRG.mp3");
-    qDebug() << process.readAllStandardOutput();
-    //qDebug() << process.readAllStandardError();
-    qDebug() << "Processing - Creating zip file";
+    qWarning() << process.readAllStandardOutput();
+    qWarning() << process.readAllStandardError();
+    qWarning() << "Processing - Creating zip file";
     emit stateChanged("Creating zip file");
     QFile::rename(tmpDir.path() + QDir::separator() + "tmp.mp3", tmpDir.path() + QDir::separator() + baseName + ".mp3");
     QFile::rename(tmpDir.path() + QDir::separator() + "tmp.cdg", tmpDir.path() + QDir::separator() + baseName + ".cdg");
@@ -81,17 +84,16 @@ void ProcessingThread::processFile(QString fileName)
     arguments << tmpDir.path() + QDir::separator() + "ReplayGainProcessed";
     process.start(program,arguments);
     process.waitForFinished();
-    qDebug () << "Processing - Replacing original file";
+    qWarning () << "Processing - Replacing original file";
     emit stateChanged("Replacing original file");
     QFile::remove(info.absoluteFilePath());
     QFile::copy(tmpDir.path() + QDir::separator() + info.fileName(), info.absoluteFilePath());
     emit stateChanged("Idle");
-    qDebug() << "Processing - Complete for file: " << fileName;
+    qWarning() << "Processing - Complete for file: " << fileName;
 }
-
+QMutex mutex;
 void ProcessingThread::run()
 {
-    QMutex mutex;
     while (!m_terminate)
     {
         mutex.lock();
@@ -115,22 +117,6 @@ void ProcessingThread::run()
     }
     emit processingFile("N/A");
     emit processingAborted();
-//    for (int i=0; i < m_files->size(); i++)
-//    {
-//        if (m_terminate)
-//        {
-//            emit processingFile("N/A");
-//            emit stateChanged("Stopped by user");
-//            emit processingAborted();
-//            return;
-//        }
-//        emit progressChanged(i);
-//        emit processingFile(m_files.at(i));
-//        processFile(m_files.at(i));
-//    }
-////    emit progressChanged(m_files.size());
-//    emit processingFile("N/A");
-//    emit processingComplete();
 }
 
 void ProcessingThread::stopProcessing()

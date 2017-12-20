@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QApplication::setApplicationName("KaraokeRG");
     QApplication::setOrganizationName("OpenKJ");
     QApplication::setOrganizationDomain("OpenKJ.org");
+    settings = new Settings(this);
+    dlgSettings = new DlgSettings(this);
     m_threads = QThread::idealThreadCount();
     if (m_threads == 1)
     {
@@ -35,6 +37,8 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->groupBox4->hide();
     }
     m_files = new QStringList;
+    connect(ui->actionSettings, SIGNAL(triggered(bool)), this, SLOT(on_actionSettings_activated()));
+    ui->checkBoxForce->setChecked(settings->forceReprocessing());
 }
 
 MainWindow::~MainWindow()
@@ -52,7 +56,6 @@ void MainWindow::on_btnBrowse_clicked()
         ui->labelPath->setText(fileName);
         ui->btnStart->setEnabled(true);
         QApplication::processEvents();
-        getFiles();
     }
 }
 
@@ -71,7 +74,7 @@ void MainWindow::getFiles()
         }
         QApplication::processEvents();
     }
-    qDebug() << "Files found: " << m_files->size();
+    qWarning() << "Files found: " << m_files->size();
     ui->progressBar->setMaximum(m_files->size());
     ui->progressBar->setValue(0);
     ui->labelStatus1->setText("Idle");
@@ -79,7 +82,9 @@ void MainWindow::getFiles()
 
 void MainWindow::on_btnStart_clicked()
 {
-    if (!m_files->size() > 0)
+    getFiles();
+    m_numProcessed = 0;
+    if (m_files->size() == 0)
         return;
     m_thread1 = new ProcessingThread(this);
     m_thread2 = new ProcessingThread(this);
@@ -144,28 +149,56 @@ void MainWindow::on_btnStart_clicked()
 void MainWindow::threadDone()
 {
     m_threadsDone++;
-    if (m_threadsDone + m_threadsAborted >= m_threads)
+    int total = m_threadsDone + m_threadsAborted;
+    if ((total >= m_threads) || (total >= m_files->size()))
     {
         ui->btnStop->setEnabled(false);
         ui->btnBrowse->setEnabled(true);
         ui->btnStart->setEnabled(true);
+        ui->labelCurrentFile1->setText("Idle");
+        ui->labelCurrentFile2->setText("Idle");
+        ui->labelCurrentFile3->setText("Idle");
+        ui->labelCurrentFile4->setText("Idle");
+        ui->labelStatus1->setText("N/A");
+        ui->labelStatus2->setText("N/A");
+        ui->labelStatus3->setText("N/A");
+        ui->labelStatus4->setText("N/A");
     }
 }
 
 void MainWindow::threadAborted()
 {
     m_threadsAborted++;
-    if (m_threadsAborted + m_threadsDone >= m_threads)
+    int total = m_threadsDone + m_threadsAborted;
+    if ((total >= m_threads) || (total >= m_files->size()))
     {
         ui->btnStop->setEnabled(false);
         ui->btnBrowse->setEnabled(true);
         ui->btnStart->setEnabled(true);
+        ui->labelCurrentFile1->setText("Aborted");
+        ui->labelCurrentFile2->setText("Aborted");
+        ui->labelCurrentFile3->setText("Aborted");
+        ui->labelCurrentFile4->setText("Aborted");
+        ui->labelStatus1->setText("N/A");
+        ui->labelStatus2->setText("N/A");
+        ui->labelStatus3->setText("N/A");
+        ui->labelStatus4->setText("N/A");
     }
 }
 
 void MainWindow::fileProcessed()
 {
-    qDebug() << "MainWindow received signal fileProcessed()";
+    qWarning() << "MainWindow received signal fileProcessed()";
     m_numProcessed++;
     ui->progressBar->setValue(m_numProcessed);
+}
+
+void MainWindow::on_actionSettings_activated()
+{
+    dlgSettings->show();
+}
+
+void MainWindow::on_checkBoxForce_toggled(bool checked)
+{
+    settings->setForceReprocessing(checked);
 }

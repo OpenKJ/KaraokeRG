@@ -14,7 +14,7 @@
 #endif
 #endif
 
-#include "miniz.c"
+#include "miniz.h"
 
 
 ZipHandler::ZipHandler(QString zipFile, QObject *parent) :
@@ -35,7 +35,7 @@ bool ZipHandler::extractMp3(QDir destDir)
     memset(&zip_archive, 0, sizeof(zip_archive));
     if (!mz_zip_reader_init_file(&zip_archive, m_zipFile.toStdString().c_str(), 0))
     {
-        qDebug() << "mz_zip_reader_init_file() failed!";
+        qWarning() << "mz_zip_reader_init_file() failed!";
         return false;
     }
 
@@ -44,7 +44,7 @@ bool ZipHandler::extractMp3(QDir destDir)
         mz_zip_archive_file_stat file_stat;
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
         {
-            qDebug() << "mz_zip_reader_file_stat() failed!";
+            qWarning() << "mz_zip_reader_file_stat() failed!";
             mz_zip_reader_end(&zip_archive);
             return false;
         }
@@ -59,7 +59,7 @@ bool ZipHandler::extractMp3(QDir destDir)
             }
             else
             {
-                qDebug() << "Error extracting file";
+                qWarning() << "Error extracting file";
             }
         }
 
@@ -74,7 +74,7 @@ bool ZipHandler::extractCdg(QDir destDir)
     memset(&zip_archive, 0, sizeof(zip_archive));
     if (!mz_zip_reader_init_file(&zip_archive, m_zipFile.toLocal8Bit().data(), 0))
     {
-        qDebug() << "mz_zip_reader_init_file() failed!";
+        qWarning() << "mz_zip_reader_init_file() failed!";
         //return false;
     }
 
@@ -83,7 +83,7 @@ bool ZipHandler::extractCdg(QDir destDir)
         mz_zip_archive_file_stat file_stat;
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
         {
-            qDebug() << "mz_zip_reader_file_stat() failed!";
+            qWarning() << "mz_zip_reader_file_stat() failed!";
             mz_zip_reader_end(&zip_archive);
             return false;
         }
@@ -98,7 +98,7 @@ bool ZipHandler::extractCdg(QDir destDir)
             }
             else
             {
-                qDebug() << "Error extracting file";
+                qWarning() << "Error extracting file";
             }
         }
 
@@ -123,7 +123,7 @@ int ZipHandler::getSongDuration()
     memset(&zip_archive, 0, sizeof(zip_archive));
     if (!mz_zip_reader_init_file(&zip_archive, m_zipFile.toLocal8Bit().data(), 0))
     {
-        qDebug() << "mz_zip_reader_init_file() failed!";
+        qWarning() << "mz_zip_reader_init_file() failed!";
         return 0;
     }
 
@@ -132,7 +132,7 @@ int ZipHandler::getSongDuration()
         mz_zip_archive_file_stat file_stat;
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
         {
-            qDebug() << "mz_zip_reader_file_stat() failed!";
+            qWarning() << "mz_zip_reader_file_stat() failed!";
             mz_zip_reader_end(&zip_archive);
             return 0;
         }
@@ -153,28 +153,28 @@ bool ZipHandler::createZip(QString zipFile, QString cdgFile, QString mp3File)
     QString mp3FileName = QFileInfo(mp3File).fileName();
     QString cdgFileName = QFileInfo(cdgFile).fileName();
     const char *s_pComment = "Created by OpenKJ KaraokeRG Utility";
-    qDebug() << "ZipHandler::createZip(" << zipFile << ", " << cdgFile << ", " << mp3File << ")";
+    qWarning() << "ZipHandler::createZip(" << zipFile << ", " << cdgFile << ", " << mp3File << ")";
     QFile mp3(mp3File);
     mp3.open(QIODevice::ReadOnly);
     QFile cdg(cdgFile);
     cdg.open(QIODevice::ReadOnly);
-    qDebug() << "loading files into memory";
+    qWarning() << "loading files into memory";
     //char *mp3Data = mp3.readAll().data();
     //char *cdgData = cdg.readAll().data();
-    qDebug() << "files loaded";
-    qDebug() << "Adding mp3 file - size: " << mp3.size() + 1;
+    qWarning() << "files loaded";
+    qWarning() << "Adding mp3 file - size: " << mp3.size() + 1;
     if (!mz_zip_add_mem_to_archive_file_in_place(zipFile.toLocal8Bit().data(), mp3FileName.toLocal8Bit().data(), mp3.readAll().data(), mp3.size() + 1, s_pComment, strlen(s_pComment), MZ_BEST_COMPRESSION))
     {
-        qDebug() << "Error adding mp3 file to archive";
+        qWarning() << "Error adding mp3 file to archive";
         return false;
     }
-    qDebug() << "Adding cdg file";
+    qWarning() << "Adding cdg file";
     if (!mz_zip_add_mem_to_archive_file_in_place(zipFile.toLocal8Bit().data(), cdgFileName.toLocal8Bit().data(), cdg.readAll().data(), cdg.size() + 1, s_pComment, strlen(s_pComment), MZ_BEST_COMPRESSION))
     {
-        qDebug() << "Error adding cdg file to archive";
+        qWarning() << "Error adding cdg file to archive";
         return false;
     }
-    qDebug() << "Files added to archive";
+    qWarning() << "Files added to archive";
     //delete mp3Data;
     //delete cdgData;
     return true;
@@ -186,7 +186,7 @@ bool ZipHandler::containsRGMarkerFile()
     memset(&zip_archive, 0, sizeof(zip_archive));
     if (!mz_zip_reader_init_file(&zip_archive, m_zipFile.toLocal8Bit().data(), 0))
     {
-        qDebug() << "mz_zip_reader_init_file() failed!";
+        qWarning() << "mz_zip_reader_init_file() failed!";
         //return false;
     }
 
@@ -195,7 +195,7 @@ bool ZipHandler::containsRGMarkerFile()
         mz_zip_archive_file_stat file_stat;
         if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
         {
-            qDebug() << "mz_zip_reader_file_stat() failed!";
+            qWarning() << "mz_zip_reader_file_stat() failed!";
             mz_zip_reader_end(&zip_archive);
             return false;
         }

@@ -15,10 +15,30 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     processingthread.cpp \
-    ziphandler.cpp
+    ziphandler.cpp \
+    miniz.c \
+    settings.cpp \
+    dlgsettings.cpp
 
 HEADERS  += mainwindow.h \
     processingthread.h \
-    ziphandler.h
+    ziphandler.h \
+    miniz.h \
+    settings.h \
+    dlgsettings.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    dlgsettings.ui
+
+unix:!macx {
+    isEmpty(PREFIX) {
+      PREFIX=/usr
+    }
+#   iconfiles.files += Icons/okjicon.svg
+#   iconfiles.path = $$PREFIX/share/pixmaps
+#   desktopfiles.files += openkj.desktop
+#   desktopfiles.path = $$PREFIX/share/applications
+    binaryfiles.files += KaraokeRG
+    binaryfiles.path = $$PREFIX/bin
+    INSTALLS += binaryfiles
+}

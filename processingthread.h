@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QStringList>
+#include "settings.h"
 
 class ProcessingThread : public QThread
 {
@@ -11,6 +12,9 @@ private:
     QStringList *m_files;
     QString m_currentFile;
     bool m_terminate;
+    Settings *settings;
+    bool m_force;
+    QString mp3gainPath;
 
 public:
     explicit ProcessingThread(QObject *parent = 0);

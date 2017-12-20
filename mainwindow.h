@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include "processingthread.h"
+#include "settings.h"
+#include "dlgsettings.h"
 
 
 namespace Ui {
@@ -23,6 +25,9 @@ private slots:
     void threadDone();
     void threadAborted();
     void fileProcessed();
+    void on_actionSettings_activated();
+
+    void on_checkBoxForce_toggled(bool checked);
 
 private:
     void getFiles();
@@ -37,6 +42,8 @@ private:
     int m_threads;
     int m_threadsDone;
     int m_threadsAborted;
+    Settings *settings;
+    DlgSettings *dlgSettings;
 
 };
 
