@@ -13,6 +13,7 @@ ProcessingThread::ProcessingThread(QObject *parent) :
     settings = new Settings(this);
     m_force = settings->forceReprocessing();
     mp3gainPath = settings->mp3GainPath();
+    zipPath = settings->zipPath();
 }
 
 void ProcessingThread::setFiles(QStringList *files)
@@ -63,7 +64,7 @@ void ProcessingThread::processFile(QString fileName)
     process.waitForFinished();
     QFile::copy(tmpDir.path() + QDir::separator() + "tmp.mp3", "/storage/KaraokeRGTest/PostRG.mp3");
     qWarning() << process.readAllStandardOutput();
-    qWarning() << process.readAllStandardError();
+    //qWarning() << process.readAllStandardError();
     qWarning() << "Processing - Creating zip file";
     emit stateChanged("Creating zip file");
     QFile::rename(tmpDir.path() + QDir::separator() + "tmp.mp3", tmpDir.path() + QDir::separator() + baseName + ".mp3");
@@ -74,7 +75,7 @@ void ProcessingThread::processFile(QString fileName)
     out << "File has been processed through ReplayGain with OpenKJ KaraokeRG";
     marker.close();
 //    zipper.createZip(, tmpDir.path() + QDir::separator() + baseName + ".cdg", tmpDir.path() + QDir::separator() + baseName + ".mp3");
-    program = "/usr/bin/zip";
+    program = zipPath;
     arguments.clear();
     arguments << "-j";
     arguments << "-9";
@@ -84,6 +85,7 @@ void ProcessingThread::processFile(QString fileName)
     arguments << tmpDir.path() + QDir::separator() + "ReplayGainProcessed";
     process.start(program,arguments);
     process.waitForFinished();
+    qWarning() << process.readAllStandardOutput();
     qWarning () << "Processing - Replacing original file";
     emit stateChanged("Replacing original file");
     QFile::remove(info.absoluteFilePath());

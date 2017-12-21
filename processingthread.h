@@ -15,6 +15,7 @@ private:
     Settings *settings;
     bool m_force;
     QString mp3gainPath;
+    QString zipPath;
 
 public:
     explicit ProcessingThread(QObject *parent = 0);
