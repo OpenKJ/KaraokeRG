@@ -34,11 +34,11 @@ unix:!macx {
     isEmpty(PREFIX) {
       PREFIX=/usr
     }
-#   iconfiles.files += Icons/okjicon.svg
-#   iconfiles.path = $$PREFIX/share/pixmaps
-#   desktopfiles.files += openkj.desktop
-#   desktopfiles.path = $$PREFIX/share/applications
+    iconfiles.files += resources/karaokerg.png
+    iconfiles.path = $$PREFIX/share/pixmaps
+    desktopfiles.files += resources/karaokerg.desktop
+    desktopfiles.path = $$PREFIX/share/applications
     binaryfiles.files += KaraokeRG
     binaryfiles.path = $$PREFIX/bin
-    INSTALLS += binaryfiles
+    INSTALLS += binaryfiles iconfiles desktopfiles
 }

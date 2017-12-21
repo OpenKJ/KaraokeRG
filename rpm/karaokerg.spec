@@ -27,8 +27,8 @@ Simple GUI tool to do ReplayGain analysis and adjustments to mp3's inside mp3+g 
 
 %files
 /usr/bin/KaraokeRG
-#/usr/share/applications/karaokerg.desktop
-#/usr/share/pixmaps/okjicon.svg
+/usr/share/applications/karaokerg.desktop
+/usr/share/pixmaps/karaokerg.png
 
 %changelog
 * Wed Dec 20 2017 T. Isaac Lightburn <isaac@hozed.net>

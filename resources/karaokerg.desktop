@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=KaraokeRG
+Comment=ReplayGain processor for mp3+g zip files
+Exec=/usr/bin/ReplayGain
+Icon=/usr/share/pixmaps/karaokerg.png
+Terminal=false
+Categories=AudioVideo;Audio;
