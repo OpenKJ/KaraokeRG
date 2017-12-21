@@ -1,4 +1,6 @@
 #include "settings.h"
+#include <QCoreApplication>
+#include <QDir>
 
 Settings::Settings(QObject *parent) : QObject(parent)
 {
@@ -7,7 +9,12 @@ Settings::Settings(QObject *parent) : QObject(parent)
 
 QString Settings::mp3GainPath()
 {
+#ifdef Q_OS_WINDOWS
+    QString appDir = QCoreApplication::applicationDirPath();
+    return settings->value("mp3gainPath", appDir + QDir::separator() + "mp3gain.exe").toString();
+#else
     return settings->value("mp3gainPath", "/usr/bin/mp3gain").toString();
+#endif
 }
 
 void Settings::setMp3GainPath(QString path)
