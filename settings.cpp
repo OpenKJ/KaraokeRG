@@ -9,7 +9,7 @@ Settings::Settings(QObject *parent) : QObject(parent)
 
 QString Settings::mp3GainPath()
 {
-#ifdef Q_OS_WINDOWS
+#ifdef Q_OS_WIN
     QString appDir = QCoreApplication::applicationDirPath();
     return settings->value("mp3gainPath", appDir + QDir::separator() + "mp3gain.exe").toString();
 #else
