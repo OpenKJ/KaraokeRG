@@ -85,6 +85,11 @@ void ProcessingThread::processFile(QString fileName)
                         qWarning() << "Error deleting old file";
                     }
                 }
+                else
+                {
+                    qWarning() << "Unable to move new file into place, restoring old one";
+                    QFile::rename(info.absoluteFilePath() + ".tmp", info.absoluteFilePath());
+                }
 
             }
             else
