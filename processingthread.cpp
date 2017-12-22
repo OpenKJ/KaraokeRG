@@ -61,9 +61,15 @@ void ProcessingThread::processFile(QString fileName)
     QProcess process;
     process.start(program, arguments);
     process.waitForFinished();
+    int exitCode = process.exitCode();
     QFile::copy(tmpDir.path() + QDir::separator() + "tmp.mp3", "/storage/KaraokeRGTest/PostRG.mp3");
     qWarning() << process.readAllStandardOutput();
     //qWarning() << process.readAllStandardError();
+    if (exitCode != 0)
+    {
+        qWarning() << "Error occurred while running mp3gain, aborting";
+        return;
+    }
     qWarning() << "Processing - Creating zip file";
     emit stateChanged("Creating zip file");
     QFile::rename(tmpDir.path() + QDir::separator() + "tmp.mp3", tmpDir.path() + QDir::separator() + baseName + ".mp3");
