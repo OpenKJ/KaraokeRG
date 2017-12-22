@@ -13,8 +13,6 @@ public:
     explicit Settings(QObject *parent = 0);
     QString mp3GainPath();
     void setMp3GainPath(QString path);
-    QString zipPath();
-    void setZipPath(QString path);
     bool forceReprocessing();
     void setForceReprocessing(bool enabled);
 

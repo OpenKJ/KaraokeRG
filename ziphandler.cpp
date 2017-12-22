@@ -152,31 +152,41 @@ bool ZipHandler::createZip(QString zipFile, QString cdgFile, QString mp3File)
 {
     QString mp3FileName = QFileInfo(mp3File).fileName();
     QString cdgFileName = QFileInfo(cdgFile).fileName();
-    const char *s_pComment = "Created by OpenKJ KaraokeRG Utility";
+    mz_zip_archive zip_archive;
+    memset(&zip_archive, 0, sizeof(zip_archive));
+    if (!mz_zip_writer_init_file(&zip_archive, zipFile.toLocal8Bit().data(),0))
+    {
+        qWarning() << "Error initializing zip file";
+    }
+    const char *s_pComment = "File has been processed through ReplayGain with OpenKJ KaraokeRG";
     qWarning() << "ZipHandler::createZip(" << zipFile << ", " << cdgFile << ", " << mp3File << ")";
-    QFile mp3(mp3File);
-    mp3.open(QIODevice::ReadOnly);
-    QFile cdg(cdgFile);
-    cdg.open(QIODevice::ReadOnly);
-    qWarning() << "loading files into memory";
-    //char *mp3Data = mp3.readAll().data();
-    //char *cdgData = cdg.readAll().data();
-    qWarning() << "files loaded";
-    qWarning() << "Adding mp3 file - size: " << mp3.size() + 1;
-    if (!mz_zip_add_mem_to_archive_file_in_place(zipFile.toLocal8Bit().data(), mp3FileName.toLocal8Bit().data(), mp3.readAll().data(), mp3.size() + 1, s_pComment, strlen(s_pComment), MZ_BEST_COMPRESSION))
+    qWarning() << "Adding mp3 file";
+    if (!mz_zip_writer_add_file(&zip_archive, mp3FileName.toLocal8Bit().data(), mp3File.toLocal8Bit().data(), NULL, 0, MZ_BEST_COMPRESSION))
     {
         qWarning() << "Error adding mp3 file to archive";
+        mz_zip_writer_finalize_archive(&zip_archive);
+        mz_zip_writer_end(&zip_archive);
         return false;
     }
     qWarning() << "Adding cdg file";
-    if (!mz_zip_add_mem_to_archive_file_in_place(zipFile.toLocal8Bit().data(), cdgFileName.toLocal8Bit().data(), cdg.readAll().data(), cdg.size() + 1, s_pComment, strlen(s_pComment), MZ_BEST_COMPRESSION))
+    if (!mz_zip_writer_add_file(&zip_archive, cdgFileName.toLocal8Bit().data(), cdgFile.toLocal8Bit().data(), NULL, 0, MZ_BEST_COMPRESSION))
     {
         qWarning() << "Error adding cdg file to archive";
+        mz_zip_writer_finalize_archive(&zip_archive);
+        mz_zip_writer_end(&zip_archive);
+        return false;
+    }
+    qWarning() << "Adding marker to file";
+    if (!mz_zip_writer_add_mem(&zip_archive,"ReplayGainProcessed", s_pComment, sizeof(s_pComment), MZ_BEST_COMPRESSION))
+    {
+        qWarning() << "Error adding marker file to archive";
+        mz_zip_writer_finalize_archive(&zip_archive);
+        mz_zip_writer_end(&zip_archive);
         return false;
     }
     qWarning() << "Files added to archive";
-    //delete mp3Data;
-    //delete cdgData;
+    mz_zip_writer_finalize_archive(&zip_archive);
+    mz_zip_writer_end(&zip_archive);
     return true;
 }
 

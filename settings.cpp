@@ -22,21 +22,6 @@ void Settings::setMp3GainPath(QString path)
     settings->setValue("mp3gainPath", path);
 }
 
-QString Settings::zipPath()
-{
-#ifdef Q_OS_WIN
-    QString appDir = QCoreApplication::applicationDirPath();
-    return settings->value("zipPath", appDir + QDir::separator() + "zip.exe").toString();
-#else
-    return settings->value("zipPath", "/usr/bin/zip").toString();
-#endif
-}
-
-void Settings::setZipPath(QString path)
-{
-    settings->setValue("zipPath", path);
-}
-
 bool Settings::forceReprocessing()
 {
     return settings->value("forceReprocessing", false).toBool();

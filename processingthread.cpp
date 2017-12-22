@@ -13,7 +13,6 @@ ProcessingThread::ProcessingThread(QObject *parent) :
     settings = new Settings(this);
     m_force = settings->forceReprocessing();
     mp3gainPath = settings->mp3GainPath();
-    zipPath = settings->zipPath();
 }
 
 void ProcessingThread::setFiles(QStringList *files)
@@ -69,29 +68,42 @@ void ProcessingThread::processFile(QString fileName)
     emit stateChanged("Creating zip file");
     QFile::rename(tmpDir.path() + QDir::separator() + "tmp.mp3", tmpDir.path() + QDir::separator() + baseName + ".mp3");
     QFile::rename(tmpDir.path() + QDir::separator() + "tmp.cdg", tmpDir.path() + QDir::separator() + baseName + ".cdg");
-    QFile marker(tmpDir.path() + QDir::separator() + "ReplayGainProcessed");
-    marker.open(QIODevice::WriteOnly);
-    QTextStream out(&marker);
-    out << "File has been processed through ReplayGain with OpenKJ KaraokeRG";
-    marker.close();
-//    zipper.createZip(, tmpDir.path() + QDir::separator() + baseName + ".cdg", tmpDir.path() + QDir::separator() + baseName + ".mp3");
-    program = zipPath;
-    arguments.clear();
-    arguments << "-j";
-    arguments << "-9";
-    arguments << tmpDir.path() + QDir::separator() + info.fileName();
-    arguments << tmpDir.path() + QDir::separator() + baseName + ".cdg";
-    arguments << tmpDir.path() + QDir::separator() + baseName + ".mp3";
-    arguments << tmpDir.path() + QDir::separator() + "ReplayGainProcessed";
-    process.start(program,arguments);
-    process.waitForFinished();
-    qWarning() << process.readAllStandardOutput();
-    qWarning () << "Processing - Replacing original file";
-    emit stateChanged("Replacing original file");
-    QFile::remove(info.absoluteFilePath());
-    QFile::copy(tmpDir.path() + QDir::separator() + info.fileName(), info.absoluteFilePath());
-    emit stateChanged("Idle");
-    qWarning() << "Processing - Complete for file: " << fileName;
+    if (zipper.createZip(tmpDir.path() + QDir::separator() + info.fileName(), tmpDir.path() + QDir::separator() + baseName + ".cdg", tmpDir.path() + QDir::separator() + baseName + ".mp3"))
+    {
+        qWarning () << "Processing - Replacing original file";
+        emit stateChanged("Replacing original file");
+        if (QFile(tmpDir.path() + QDir::separator() + info.fileName()).exists())
+        {
+            qWarning() << "Doing QFile::rename(" << info.absoluteFilePath() << ", " << info.absoluteFilePath() + ".tmp" << ");";
+            if (QFile::rename(info.absoluteFilePath(), info.absoluteFilePath() + ".tmp"))
+            {
+                if (QFile::copy(tmpDir.path() + QDir::separator() + info.fileName(), info.absoluteFilePath()))
+                {
+                    qWarning() << "New file copied into place, deleting old one";
+                    if (!QFile::remove(info.absoluteFilePath() + ".tmp"))
+                    {
+                        qWarning() << "Error deleting old file";
+                    }
+                }
+
+            }
+            else
+            {
+                qWarning() << "Unable to move existing file to tmp file";
+                return;
+            }
+        }
+        else
+        {
+            qWarning() << "Unexpected error, new processed zip file missing!";
+        }
+        emit stateChanged("Idle");
+        qWarning() << "Processing - Complete for file: " << fileName;
+    }
+    else
+    {
+        qWarning() << "Failed to create new archive, leaving original file in place";
+    }
 }
 QMutex mutex;
 void ProcessingThread::run()
