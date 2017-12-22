@@ -5,6 +5,7 @@
 #include <QDirIterator>
 #include <QApplication>
 #include <QDebug>
+#include <QMessageBox>
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -82,6 +83,13 @@ void MainWindow::getFiles()
 
 void MainWindow::on_btnStart_clicked()
 {
+    if (!QFile::exists(settings->mp3GainPath()))
+    {
+        QMessageBox msgBox;
+        msgBox.setText("mp3gain not found!  Please set the mp3gain path in settings.");
+        msgBox.exec();
+        return;
+    }
     getFiles();
     m_numProcessed = 0;
     if (m_files->size() == 0)
